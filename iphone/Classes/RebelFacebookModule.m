@@ -1,0 +1,518 @@
+/**
+ * Facebook
+ *
+ * Created by Timan Rebel
+ * Copyright (c) 2014 Timan Rebel. All rights reserved.
+ */
+
+#import "RebelFacebookModule.h"
+#import "TiBase.h"
+#import "TiHost.h"
+#import "TiUtils.h"
+#import "TiApp.h"
+
+bool temporarilySuspended = NO;
+KrollCallback* loginCallback;
+
+@implementation RebelFacebookModule
+
+#pragma mark Internal
+
+// this is generated for your module, please do not change it
+-(id)moduleGUID
+{
+	return @"cabc91e7-a6a5-43f0-88c6-5842914d2550";
+}
+
+// this is generated for your module, please do not change it
+-(NSString*)moduleId
+{
+	return @"rebel.facebook";
+}
+
+#pragma mark Lifecycle
+
+-(void)startup
+{
+	TiThreadPerformOnMainThread(^{
+		NSNotificationCenter * nc = [NSNotificationCenter defaultCenter];
+        [nc addObserver:self selector:@selector(activateApp:) name:UIApplicationDidBecomeActiveNotification object:nil];
+    }, YES);
+        
+	// you *must* call the superclass
+	[super startup];
+
+	NSLog(@"[INFO] %@ loaded",self);
+}
+
+-(void)shutdown:(id)sender
+{
+	TiThreadPerformOnMainThread(^{
+        [FBSession.activeSession close];
+    }, NO);
+    
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+
+	// you *must* call the superclass
+	[super shutdown:sender];
+}
+
+-(void)suspend:(id)sender
+{
+	NSLog(@"[DEBUG] facebook suspend");
+    
+    temporarilySuspended = YES; // to avoid crazy logic if user rejects a call or SMS
+}
+
+-(void)paused:(id)sender
+{
+	NSLog(@"[DEBUG] facebook paused");
+    
+    temporarilySuspended = NO; // Since we are guaranteed full resume logic following this
+}
+
+-(void)resumed:(id)note
+{
+	NSLog(@"[DEBUG] facebook resumed");
+    
+	if (!temporarilySuspended) {
+        NSDictionary *launchOptions = [[TiApp app] launchOptions];
+        if (launchOptions != nil)
+        {
+            NSString *urlString = [launchOptions objectForKey:@"url"];
+            NSString *sourceApplication = [launchOptions objectForKey:@"source"];
+            
+            if (urlString != nil) {
+                // Note this handler block should be the exact same as the handler passed to any open calls.
+                [FBSession.activeSession setStateChangeHandler:^(FBSession *session, FBSessionState state, NSError *error) {
+                    // Call the app delegate's sessionStateChanged:state:error method to handle session state changes
+                    [self sessionStateChanged:session state:state error:error];
+                }];
+                
+                return [FBAppCall handleOpenURL:[NSURL URLWithString:urlString] sourceApplication:sourceApplication];
+            } else {
+                return NO;
+            }
+        }
+        
+        TiThreadPerformOnMainThread(^{
+            if (FBSession.activeSession.state == FBSessionStateCreatedTokenLoaded) {
+                // Start with logged-in state, guaranteed no login UX is fired since logged-in
+                // If there's one, just open the session silently, without showing the user the login UI
+                [FBSession openActiveSessionWithReadPermissions:@[@"public_profile"]
+                                                   allowLoginUI:NO
+                                              completionHandler:^(FBSession *session, FBSessionState state, NSError *error) {
+                                                  // Handler for session state changes
+                                                  // This method will be called EACH time the session state changes,
+                                                  // also for intermediate states and NOT just when the session open
+                                                  [self sessionStateChanged:session state:state error:error];
+                                              }];
+            }
+        }, YES);
+        
+        return NO;
+    }
+}
+
+-(void)activateApp:(NSNotification *)notification
+{
+    [FBAppCall handleDidBecomeActive];
+    
+    // Call the 'activateApp' method to log an app event for use in analytics and advertising reporting.
+    [FBAppEvents activateApp];
+}
+
+#pragma mark Cleanup
+
+-(void)dealloc
+{
+	// release any resources that have been retained by the module
+    RELEASE_TO_NIL(stateListeners);
+    RELEASE_TO_NIL(loginCallback);
+    
+	[super dealloc];
+}
+
+#pragma mark Internal Memory Management
+
+-(void)didReceiveMemoryWarning:(NSNotification*)notification
+{
+	// optionally release any resources that can be dynamically
+	// reloaded once memory is available - such as caches
+	[super didReceiveMemoryWarning:notification];
+}
+
+#pragma mark Listener Notifications
+
+-(void)_listenerAdded:(NSString *)type count:(int)count
+{
+	if (count == 1 && [type isEqualToString:@"my_event"])
+	{
+		// the first (of potentially many) listener is being added
+		// for event named 'my_event'
+	}
+}
+
+-(void)_listenerRemoved:(NSString *)type count:(int)count
+{
+	if (count == 0 && [type isEqualToString:@"my_event"])
+	{
+		// the last listener called for event named 'my_event' has
+		// been removed, we can optionally clean up any resources
+		// since no body is listening at this point for that event
+	}
+}
+
+#pragma mark Auth Internals
+- (void)sessionStateChanged:(FBSession *)session state:(FBSessionState) state error:(NSError *)error {
+    // If the session was opened successfully
+    if (!error && state == FBSessionStateOpen){
+        NSLog(@"FBSession opened");
+        
+        // Show the user the logged-in UI
+        [self callLoginCallback:YES cancelled:nil withError:nil];
+        
+        return;
+    }
+    if (state == FBSessionStateClosed || state == FBSessionStateClosedLoginFailed){
+        // If the session is closed
+        NSLog(@"FBSession closed");
+        
+        // Show the user the logged-out UI
+        [self fireEvent:@"logout"];
+    }
+    
+    // Handle errors
+    if (error){
+        NSLog(@"FBSession Error");
+        
+        bool userCancelled = error.fberrorCategory == FBErrorCategoryUserCancelled;
+        [self callLoginCallback:NO cancelled:userCancelled withError:error];
+        
+        
+        
+        // Clear this token
+        [FBSession.activeSession closeAndClearTokenInformation];
+        
+        // Show the user the logged-out UI
+        [self fireEvent:@"logout"];
+    }
+    
+    if (error) {
+        NSLog(@"sessionStateChanged error");
+        
+        BOOL userCancelled = error.fberrorCategory == FBErrorCategoryUserCancelled;
+        [self callLoginCallback:NO cancelled:userCancelled withError:error];
+    } else {
+        switch (state) {
+            case FBSessionStateOpen:
+                NSLog(@"[DEBUG] FBSessionStateOpen");
+                [self callLoginCallback:YES cancelled:nil withError:nil];
+                
+                break;
+            case FBSessionStateClosed:
+            case FBSessionStateClosedLoginFailed:
+                NSLog(@"[DEBUG] facebook session closed");
+                TiThreadPerformOnMainThread(^{
+                    [FBSession.activeSession closeAndClearTokenInformation];
+                }, YES);
+                
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+#pragma Public APIs
+-(id)uid
+{
+	__block NSString * userID;
+    TiThreadPerformOnMainThread(^{
+        userID = FBSession.activeSession.accessTokenData.userID;
+    }, YES);
+    
+    return userID;
+}
+
+-(BOOL)isLoggedIn
+{
+    return FBSession.activeSession.state == FBSessionStateOpen;
+}
+
+-(BOOL)canShare
+{
+    FBShareDialogParams *params = [[FBShareDialogParams alloc] init];
+    params.link = [NSURL URLWithString:@"http://developers.facebook.com/ios"];
+    return [FBDialogs canPresentShareDialogWithParams:params];
+}
+
+// Returns the active permissions, not the wanted permissions
+-(id)permissions
+{
+    __block NSArray *perms;
+    TiThreadPerformOnMainThread(^{
+        perms = FBSession.activeSession.permissions;
+    }, YES);
+    
+    return perms;
+}
+
+-(id)accessToken
+{
+    __block NSString * token;
+    TiThreadPerformOnMainThread(^{
+        token = FBSession.activeSession.accessTokenData.accessToken;
+    }, YES);
+    
+    return token;
+}
+
+-(id)accessTokenData
+{
+    return [NSMutableDictionary dictionaryWithObjectsAndKeys:
+            FBSession.activeSession.accessTokenData.accessToken,@"accessToken",
+            FBSession.activeSession.accessTokenData.permissions,@"permissions",
+            FBSession.activeSession.accessTokenData.declinedPermissions,@"declinedPermissions",
+            FBSession.activeSession.accessTokenData.expirationDate,@"expirationDate",
+            FBSession.activeSession.accessTokenData.refreshDate,@"refreshDate",
+            FBSession.activeSession.accessTokenData.permissionsRefreshDate,@"permissionsRefreshDate",
+            FBSession.activeSession.accessTokenData.appID,@"appID",
+            FBSession.activeSession.accessTokenData.userID,@"userID",
+            nil];
+}
+
+-(id)expirationDate
+{
+    __block NSDate *expirationDate;
+    TiThreadPerformOnMainThread(^{
+        expirationDate = FBSession.activeSession.accessTokenData.expirationDate;
+    }, YES);
+    
+    return expirationDate;
+}
+
+-(id)audienceNone
+{
+    return [NSNumber numberWithInt:FBSessionDefaultAudienceNone];
+}
+
+-(id)audienceOnlyMe
+{
+    return [NSNumber numberWithInt:FBSessionDefaultAudienceOnlyMe];
+}
+
+-(id)audienceFriends
+{
+    return [NSNumber numberWithInt:FBSessionDefaultAudienceFriends];
+}
+
+-(id)audienceEveryone
+{
+    return [NSNumber numberWithInt:FBSessionDefaultAudienceEveryone];
+}
+
+-(void)authorize:(id)args
+{
+	NSLog(@"[DEBUG] facebook authorize");
+    
+    ENSURE_ARG_COUNT(args, 2);
+    
+    RELEASE_TO_NIL(loginCallback);
+    NSArray *permissions = [args objectAtIndex:0];
+    loginCallback = [[args objectAtIndex:1] retain];
+    
+	TiThreadPerformOnMainThread(^{
+        // Make sure we do not send nil as permissions
+		NSArray *permissions_ = permissions == nil ? [NSArray array] : permissions;
+        
+        // If the session state is any of the two "open" states when the button is clicked
+        if (FBSession.activeSession.state == FBSessionStateOpen
+            || FBSession.activeSession.state == FBSessionStateOpenTokenExtended) {
+            
+            // Do nothing
+            
+            // If the session state is not any of the two "open" states when the button is clicked
+        } else {
+            // Open a session showing the user the login UI
+            [FBSession openActiveSessionWithReadPermissions:permissions
+                                               allowLoginUI:YES
+                                          completionHandler:^(FBSession *session, FBSessionState state, NSError *error) {
+                                              
+                                              // Call the sessionStateChanged:state:error method to handle session state changes
+                                              [self sessionStateChanged:session state:state error:error];
+                                          }];
+        }
+	}, NO);
+}
+
+-(void)logout:(id)args
+{
+	NSLog(@"[DEBUG] facebook logout");
+    
+	if ([self isLoggedIn])
+	{
+        TiThreadPerformOnMainThread(^{
+            [FBSession.activeSession closeAndClearTokenInformation];
+        }, NO);
+	}
+}
+
+// Request publish_actions
+-(void)requestNewPublishPermissions:(id)args
+{
+    ENSURE_ARG_COUNT(args, 3);
+    
+    NSArray * newPermissions = [args objectAtIndex:0];
+    int audience = [args objectAtIndex:1];
+    KrollCallback * callback = [args objectAtIndex:2];
+    
+    TiThreadPerformOnMainThread(^{
+    
+        [FBSession.activeSession requestNewPublishPermissions:newPermissions
+                                            defaultAudience:audience
+                                            completionHandler:^(FBSession *session, NSError *error) {
+                                                
+            NSMutableDictionary *event = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                          nil];
+
+            if (!error) {
+                [event setObject:YES forKey:@"success"];
+            } else {
+                // There was an error, handle it
+                // See https://developers.facebook.com/docs/ios/errors/
+                [event setObject:error forKey:@"error"];
+            }
+        }];
+    }, YES);
+}
+
+-(void)requestNewReadPermissions:(id)args
+{
+    ENSURE_ARG_COUNT(args, 2);
+    
+    NSArray * newPermissions = [args objectAtIndex:0];
+    KrollCallback * callback = [args objectAtIndex:1];
+    
+    TiThreadPerformOnMainThread(^{
+        
+        [FBSession.activeSession requestNewReadPermissions:newPermissions
+                                            completionHandler:^(FBSession *session, NSError *error) {
+                                                
+                                                NSMutableDictionary *event = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                                                              nil];
+                                                
+                                                if (!error) {
+                                                    [event setObject:YES forKey:@"success"];
+                                                } else {
+                                                    // There was an error, handle it
+                                                    // See https://developers.facebook.com/docs/ios/errors/
+                                                    [event setObject:error forKey:@"error"];
+                                                }
+                                            }];
+    }, YES);
+}
+
+-(void)logEvent:eventName
+{
+    ENSURE_SINGLE_ARG(eventName, NSString);
+    
+    [FBAppEvents logEvent:eventName];
+}
+
+-(void)logPurchase:args
+{
+    ENSURE_ARG_COUNT(args, 2);
+    
+    long amount = [args objectAtIndex:0];
+    NSString * currency = [args objectAtIndex:1];
+    
+    [FBAppEvents logPurchase:amount currency:currency];
+}
+
+#pragma mark Listener work
+
+-(void)callLoginCallback:(id)success cancelled:(BOOL)cancelled withError:(NSError *)error
+{
+	NSMutableDictionary *event = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+								  NUMBOOL(success),@"success",
+                                  NUMBOOL(cancelled),@"cancelled",
+                                  nil];
+	if(error){
+        NSString *alertText;
+        NSString *alertTitle;
+        
+        // If the error requires people using an app to make an action outside of the app in order to recover
+        if ([FBErrorUtility shouldNotifyUserForError:error] == YES) {
+            alertTitle = @"Something went wrong";
+            alertText = [FBErrorUtility userMessageForError:error];
+        } else {
+            // If the user cancelled login, do nothing
+            if ([FBErrorUtility errorCategoryForError:error] == FBErrorCategoryUserCancelled) {
+                NSLog(@"User cancelled login");
+                
+                // Handle session closures that happen outside of the app
+            } else if ([FBErrorUtility errorCategoryForError:error] == FBErrorCategoryAuthenticationReopenSession){
+                alertTitle = @"Session Error";
+                alertText = @"Your current session is no longer valid. Please log in again.";
+                
+                // Here we will handle all other errors with a generic error message.
+                // We recommend you check our Handling Errors guide for more information
+                // https://developers.facebook.com/docs/ios/errors/
+            } else {
+                //Get more error information from the error
+                NSDictionary *errorInformation = [[[error.userInfo objectForKey:@"com.facebook.sdk:ParsedJSONResponseKey"] objectForKey:@"body"] objectForKey:@"error"];
+                
+                // Show the user an error message
+                alertTitle = @"Something went wrong";
+                alertText = [NSString stringWithFormat:@"Please retry. \n\n If the problem persists contact us and mention this error code: %@", [errorInformation objectForKey:@"message"]];
+            }
+        }
+        
+        NSDictionary *error = [NSDictionary dictionaryWithObjectsAndKeys:
+                                      NUMINT([error code]),@"code",
+                                      alertTitle,@"title",
+                                      alertText,@"message",
+                               nil];
+        
+        [event setObject:NO forKey:@"success"];
+        [event setObject:error forKey:@"error"];
+	}
+    
+    if(success) {
+        [event setObject:[self accessTokenData] forKey:@"accessTokenData"];
+    }
+    
+	if(loginCallback) {
+        KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:loginCallback eventObject:event thisObject:self];
+        [[loginCallback context] enqueue:invocationEvent];
+        [invocationEvent release];
+    }
+}
+
+
+#pragma mark Listeners
+
+-(void)addListener:(id<TiFacebookStateListener>)listener
+{
+	if (stateListeners==nil)
+	{
+		stateListeners = [[NSMutableArray alloc]init];
+	}
+	[stateListeners addObject:listener];
+}
+
+-(void)removeListener:(id<TiFacebookStateListener>)listener
+{
+	if (stateListeners!=nil)
+	{
+		[stateListeners removeObject:listener];
+		if ([stateListeners count]==0)
+		{
+			RELEASE_TO_NIL(stateListeners);
+		}
+	}
+}
+
+
+@end
