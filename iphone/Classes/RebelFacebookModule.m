@@ -270,7 +270,7 @@ KrollCallback* loginCallback;
 
 -(id)accessTokenData
 {
-    return [NSMutableDictionary dictionaryWithObjectsAndKeys:
+    return [NSDictionary dictionaryWithObjectsAndKeys:
             FBSession.activeSession.accessTokenData.accessToken,@"accessToken",
             FBSession.activeSession.accessTokenData.permissions,@"permissions",
             FBSession.activeSession.accessTokenData.declinedPermissions,@"declinedPermissions",
@@ -336,12 +336,11 @@ KrollCallback* loginCallback;
         } else {
             // Open a session showing the user the login UI
             [FBSession openActiveSessionWithReadPermissions:permissions
-                                               allowLoginUI:YES
-                                          completionHandler:^(FBSession *session, FBSessionState state, NSError *error) {
-                                              
-                                              // Call the sessionStateChanged:state:error method to handle session state changes
-                                              [self sessionStateChanged:session state:state error:error];
-                                          }];
+                                        allowLoginUI:YES
+                                        completionHandler:^(FBSession *session, FBSessionState state, NSError *error) {
+                // Call the sessionStateChanged:state:error method to handle session state changes
+                [self sessionStateChanged:session state:state error:error];
+            }];
         }
 	}, NO);
 }
@@ -383,8 +382,14 @@ KrollCallback* loginCallback;
                 // See https://developers.facebook.com/docs/ios/errors/
                 [event setObject:error forKey:@"error"];
             }
+                                                
+            if(callback) {
+                KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:event thisObject:self];
+                [[callback context] enqueue:invocationEvent];
+                [invocationEvent release];
+            }
         }];
-    }, YES);
+    }, NO);
 }
 
 -(void)requestNewReadPermissions:(id)args
@@ -397,20 +402,26 @@ KrollCallback* loginCallback;
     TiThreadPerformOnMainThread(^{
         
         [FBSession.activeSession requestNewReadPermissions:newPermissions
-                                            completionHandler:^(FBSession *session, NSError *error) {
+                                         completionHandler:^(FBSession *session, NSError *error) {
                                                 
-                                                NSMutableDictionary *event = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-                                                                              nil];
-                                                
-                                                if (!error) {
-                                                    [event setObject:YES forKey:@"success"];
-                                                } else {
-                                                    // There was an error, handle it
-                                                    // See https://developers.facebook.com/docs/ios/errors/
-                                                    [event setObject:error forKey:@"error"];
-                                                }
-                                            }];
-    }, YES);
+            NSMutableDictionary *event = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                          nil];
+            
+            if (!error) {
+                [event setObject:YES forKey:@"success"];
+            } else {
+                // There was an error, handle it
+                // See https://developers.facebook.com/docs/ios/errors/
+                [event setObject:error forKey:@"error"];
+            }
+            
+            if(callback) {
+                KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:event thisObject:self];
+                [[callback context] enqueue:invocationEvent];
+                [invocationEvent release];
+            }
+        }];
+    }, NO);
 }
 
 -(void)logEvent:eventName
@@ -425,10 +436,145 @@ KrollCallback* loginCallback;
     ENSURE_ARG_COUNT(args, 2);
     
     long amount = [args objectAtIndex:0];
-    NSString * currency = [args objectAtIndex:1];
+    NSString* currency = [args objectAtIndex:1];
     
     [FBAppEvents logPurchase:amount currency:currency];
 }
+
+-(void)shareStatus:args
+{
+    NSDictionary* params = [args objectAtIndex:0];
+    NSString* name = [params objectForKey:@"name"];
+    
+    [FBDialogs presentShareDialogWithLink:nil
+                                     name: name
+                                  handler: ^(FBAppCall *call, NSDictionary *results, NSError *error) {
+                                      
+                                      if(error) {
+                                          NSLog(@"Error: %@", error.description);
+                                      } else {
+                                          NSLog(@"Success!");
+                                          NSLog(results);
+                                      }
+                                  }];
+}
+
+-(void)shareLink:args
+{
+    NSDictionary* params = [args objectAtIndex:0];
+    NSURL* link = [NSURL URLWithString:[params objectForKey:@"url"]];
+    NSURL* picture = [NSURL URLWithString:[params objectForKey:@"picture"]];
+    NSString* name = [params objectForKey:@"name"];
+    NSString* caption = [params objectForKey:@"caption"];
+    NSString* description = [params objectForKey:@"description"];
+    
+    [FBDialogs presentShareDialogWithLink:link
+        name: name
+        caption: caption
+        description: description
+        picture: picture
+        clientState: nil
+        handler: ^(FBAppCall *call, NSDictionary *results, NSError *error) {
+      
+      if(error) {
+          NSLog(@"Error: %@", error.description);
+      } else {
+          NSLog(@"Success!");
+          NSLog( @"%@", results);
+      }
+  }];
+}
+
+-(void)shareOpenGraphAction:args
+{
+    NSDictionary* params = [args objectAtIndex:0];
+    
+    NSURL* link = [NSURL URLWithString:[params objectForKey:@"url"]];
+    NSURL* picture = [NSURL URLWithString:[params objectForKey:@"picture"]];
+    NSString* title = [params objectForKey:@"title"];
+    NSString* description = [params objectForKey:@"description"];
+    
+    NSString* actionType = [params objectForKey:@"actionType"];
+    NSString* previewPropertyName = [params objectForKey:@"previewPropertyName"];
+    
+    id<FBGraphObject> ogObject = [FBGraphObject openGraphObjectForPostWithType: actionType
+                                            title: title
+                                            image: picture
+                                              url: link
+                                      description: description];
+    
+    id<FBOpenGraphAction> ogAction = (id<FBOpenGraphAction>)[FBGraphObject graphObject];
+    [ogAction setObject:ogObject forKey:previewPropertyName];
+    
+    [FBDialogs presentShareDialogWithOpenGraphAction: ogAction
+                                          actionType: actionType
+                                 previewPropertyName: previewPropertyName
+                                         clientState: nil
+                                             handler: ^(FBAppCall *call, NSDictionary *results, NSError *error) {
+          if(error) {
+              NSLog(@"Error: %@", error.description);
+          } else {
+              NSLog(@"Success!");
+//              NSLog( @"%@", results);
+          }
+      }];
+}
+
+-(void)me:args
+{
+    ENSURE_ARG_COUNT(args, 1);
+    
+    KrollCallback * callback = [args objectAtIndex:0];
+    
+    TiThreadPerformOnMainThread(^{
+        NSLog(@"Fetching me");
+        if([FBSession.activeSession isOpen])
+        {
+            [self makeRequestForUserData:callback];
+        }
+        else
+        {
+            [FBSession.activeSession openWithCompletionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
+                [self makeRequestForUserData:callback];
+            }];
+        }
+    }, NO);
+}
+
+- (void)makeRequestForUserData:(KrollCallback *)callback
+{
+    [FBRequestConnection startForMeWithCompletionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
+        if (!error) {
+            // Success! Include your code to handle the results here
+            if(callback) {
+                KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:result thisObject:self];
+                [[callback context] enqueue:invocationEvent];
+            }
+        } else {
+            // An error occurred, we need to handle the error
+            // See: https://developers.facebook.com/docs/ios/errors
+            NSLog(@"********************************** error");
+            NSLog(@"error: %@", error);
+        }
+    }];
+}
+
+//-(void)showFriendPicker:args
+//{
+//    // Initialize the friend picker
+//    FBFriendPickerViewController *friendPickerController =
+//    [[FBFriendPickerViewController alloc] init];
+//    // Set the friend picker title
+//    friendPickerController.title = @"Pick Friends";
+//    
+//    // TODO: Set up the delegate to handle picker callbacks, ex: Done/Cancel button
+//    
+//    // Load the friend data
+//    [friendPickerController loadData];
+//    // Show the picker modally
+//    [friendPickerController presentModallyFromViewController:[args objectAtIndex:0] animated:YES handler:nil];
+////    [[TiApp app] showModalController:friendPickerController animated:YES];
+//}
 
 #pragma mark Listener work
 

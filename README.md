@@ -89,6 +89,8 @@ Audience is one of the following:
 
 Request extra read permissions from Facebook
 
+## App Events
+### Functions
 #### logEvent(String eventName)
 
 Log custom App Event
@@ -96,3 +98,15 @@ Log custom App Event
 #### logPurchase(long amount, String currency)
 
 Log purchase
+
+## Dialogs
+### Share Dialog
+The Share dialog works by making a one-line call to the SDK that configures the content to share, does an app switch to the native Facebook for iOS app, and returns to your app once people have shared. The Share Dialog requires that the user has the native Facebook for iOS app installed on their device.
+
+#### shareStatus(Object args)
+#### shareLink(Object args)
+#### shareOpenGraphAction(Object args)
+
+## Graph API
+#### me (function callback)
+Request the user data from the authorized Facebook user. Is returned as arguments of the callback function
