@@ -1,6 +1,6 @@
 ## App Events
 
-Every time the app becomes active, the module logs an app activation event.
+Note: Every time the app becomes active, the module logs an app activation event automatically.
 
 ### Functions
 #### logEvent (*String eventName*)
