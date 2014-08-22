@@ -30,9 +30,9 @@ The documentation is split up in the following sections:
 
 ## Changelog
 
-* 1.0.2 Support for first Graph API call and Share Dialog
-* 1.0.1 Support for App Events
-* 1.0.0 Initial working version with only Facebook login
+* [1.0.2](https://github.com/timanrebel/Facebook/releases/tag/1.0.2) Support for first Graph API call and Share Dialog
+* [1.0.1](https://github.com/timanrebel/Facebook/releases/tag/1.0.1) Support for App Events
+* [1.0.0](https://github.com/timanrebel/Facebook/releases/tag/1.0.0) Initial working version with only Facebook login
 
 ## Author
 
