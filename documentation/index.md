@@ -6,7 +6,7 @@ That is, backwards incompatible changes might still be pushed.
 ## Quick Start
 
 ### Get it [![gitTio](http://gitt.io/badge.png)](http://gitt.io/component/rebel.facebook)
-Download the latest distribution ZIP-file and consult the [Titanium Documentation](http://docs.appcelerator.com/titanium/latest/#!/guide/Using_a_Module) on how install it, or simply use the [gitTio CLI](http://gitt.io/cli):
+Download the latest zip file from [Releases](https://github.com/timanrebel/Facebook/releases) and consult the [Titanium Documentation](http://docs.appcelerator.com/titanium/latest/#!/guide/Using_a_Module) on how install it, or simply use the [gitTio CLI](http://gitt.io/cli):
 
 `$ gittio install rebel.facebook`
 
