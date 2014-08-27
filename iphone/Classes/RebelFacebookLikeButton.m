@@ -15,8 +15,12 @@
     [super dealloc];
 }
 
--(void)configurationSet
+-(void)initializeState
 {
+#if DEBUG
+    [FBSettings enableBetaFeature:FBBetaFeaturesLikeButton];
+#endif
+    
     button = [[FBLikeControl alloc] init];
     button.objectID = @"http://facebook.com/rebelsapp";
     
@@ -37,19 +41,6 @@
 	NSLog(@"[VIEW LIFECYCLE EVENT] willMoveToSuperview");
 }
 
--(void)initializeState
-{
-	// This method is called right after allocating the view and
-	// is useful for initializing anything specific to the view
-#if DEBUG
-    [FBSettings enableBetaFeature:FBBetaFeaturesLikeButton];
-#endif
-	
-	[super initializeState];
-	
-	NSLog(@"[VIEW LIFECYCLE EVENT] initializeState");
-}
-
 
 -(void)setUrl_:(id)url
 {
@@ -60,12 +51,7 @@
 	NSLog(@"[VIEW LIFECYCLE EVENT] Property Set: setUrl_");
     NSLog(@"Like available: %@", FBLikeControl.dialogIsAvailable);
 	
-//    FBLikeControl *button = [self like];
 //    button.objectID = url;
-    
-	// Signal a property change notification to demonstrate the use
-	// of the proxy for the event listeners
-//	[self notifyOfColorChange:newColor];
 }
 
 @end
