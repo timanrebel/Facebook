@@ -345,8 +345,6 @@ KrollCallback* loginCallback;
 {
 	NSLog(@"[DEBUG] facebook authorize");
     
-    ENSURE_ARG_COUNT(args, 2);
-    
     RELEASE_TO_NIL(loginCallback);
     NSArray *permissions = [args objectAtIndex:0];
     loginCallback = [[args objectAtIndex:1] retain];
@@ -664,7 +662,7 @@ KrollCallback* loginCallback;
         [invocationEvent release];
     }
     
-    [self fireEvent:@"login"];
+    [self fireEvent:@"login" withObject:event];
 }
 
 
