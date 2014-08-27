@@ -7,24 +7,24 @@
 
 #import "RebelFacebookLoginButton.h"
 
-NSArray *permissions;
-
 @implementation RebelFacebookLoginButton
 
 -(void)dealloc
 {
     RELEASE_TO_NIL(button);
+    
     [super dealloc];
 }
 
 -(void)configurationSet
 {
-    if(permissions) {
-        NSLog(@"Init with permissions");
-        button = [[FBLoginView alloc] initWithReadPermissions:permissions];
-    }
+    if([self proxyValueForKey:@"readPermissions"])
+        button = [[FBLoginView alloc] initWithReadPermissions:[self proxyValueForKey:@"readPermissions"]];
+    else if([self proxyValueForKey:@"publishPermissions"] && [self proxyValueForKey:@"defaultAudience"])
+        button = [[FBLoginView alloc] initWithPublishPermissions:[self proxyValueForKey:@"publishPermissions"] defaultAudience:[self proxyValueForKey:@"defaultAudience"]];
     else
         button = [[FBLoginView alloc] init];
+    
     button.delegate = self;
     
 //    button.tooltipBehavior = FBLoginViewTooltipBehaviorForceDisplay;
@@ -42,13 +42,25 @@ NSArray *permissions;
     [super frameSizeChanged:frame bounds:bounds];
 }
 
--(void)setReadPermissions_:(NSArray *)perms
+-(void)setReadPermissions_:(NSArray *)permissions
 {
-    permissions = perms;
-    
     // If button has already been created, update permissions
     if(button != nil)
         button.readPermissions = permissions;
+}
+
+-(void)setPublishPermissions_:(NSArray *)permissions
+{
+    // If button has already been created, update permissions
+    if(button != nil)
+        button.publishPermissions = permissions;
+}
+
+-(void)setDefaultAudience_:(id)audience
+{
+    // If button has already been created, update audience
+    if(button != nil)
+        button.defaultAudience = audience;
 }
 
 // This method will be called when the user information has been fetched
