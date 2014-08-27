@@ -6,15 +6,55 @@
  */
 
 #import "RebelFacebookModule.h"
+
 #import "TiBase.h"
 #import "TiHost.h"
 #import "TiUtils.h"
 #import "TiApp.h"
 
+#import "JRSwizzle.h"
+
 bool temporarilySuspended = NO;
 KrollCallback* loginCallback;
 
+// Create a category which adds new methods to TiApp
+@implementation TiApp (Facebook)
+
+- (void)facebookApplicationDidBecomeActive:(UIApplication *)application
+{
+    // If you're successful, you should see the following output from titanium
+    NSLog(@"[INFO] -- RebelFacebookModule#applicationDidBecomeActive --");
+    
+    // be sure to call the original method
+    // note: swizzle will 'swap' implementations, so this is calling the original method,
+    // not the current method... so this will not infinitely recurse. promise.
+    [self facebookApplicationDidBecomeActive:application];
+    
+    // Add your custom code here...
+    // Handle the user leaving the app while the Facebook login dialog is being shown
+    // For example: when the user presses the iOS "home" button while the login dialog is active
+    [FBAppCall handleDidBecomeActive];
+    
+    // Call the 'activateApp' method to log an app event for use in analytics and advertising reporting.
+    [FBAppEvents activateApp];
+}
+
+@end
+
 @implementation RebelFacebookModule
+
+// This is the magic bit... Method Swizzling
+// important that this happens in the 'load' method, otherwise the methods
+// don't get swizzled early enough to actually hook into app startup.
++ (void)load {
+    NSError *error = nil;
+    
+    [TiApp jr_swizzleMethod:@selector(applicationDidBecomeActive)
+                 withMethod:@selector(facebookApplicationDidBecomeActive:)
+                      error:&error];
+    if(error)
+        NSLog(@"[WARN] Cannot swizzle application:openURL:sourceApplication:annotation: %@", error);
+}
 
 #pragma mark Internal
 
@@ -34,10 +74,9 @@ KrollCallback* loginCallback;
 
 -(void)startup
 {
-	TiThreadPerformOnMainThread(^{
-		NSNotificationCenter * nc = [NSNotificationCenter defaultCenter];
-        [nc addObserver:self selector:@selector(activateApp:) name:UIApplicationDidBecomeActiveNotification object:nil];
-    }, YES);
+    #if DEBUG
+    [FBSettings enableBetaFeature:FBBetaFeaturesLikeButton];
+    #endif
         
 	// you *must* call the superclass
 	[super startup];
@@ -50,8 +89,6 @@ KrollCallback* loginCallback;
 	TiThreadPerformOnMainThread(^{
         [FBSession.activeSession close];
     }, NO);
-    
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
 
 	// you *must* call the superclass
 	[super shutdown:sender];
@@ -112,14 +149,6 @@ KrollCallback* loginCallback;
         
         return NO;
     }
-}
-
--(void)activateApp:(NSNotification *)notification
-{
-    [FBAppCall handleDidBecomeActive];
-    
-    // Call the 'activateApp' method to log an app event for use in analytics and advertising reporting.
-    [FBAppEvents activateApp];
 }
 
 #pragma mark Cleanup
@@ -332,7 +361,7 @@ KrollCallback* loginCallback;
             
             // Do nothing
             
-            // If the session state is not any of the two "open" states when the button is clicked
+        // If the session state is not any of the two "open" states when the button is clicked
         } else {
             // Open a session showing the user the login UI
             [FBSession openActiveSessionWithReadPermissions:permissions
@@ -362,9 +391,9 @@ KrollCallback* loginCallback;
 {
     ENSURE_ARG_COUNT(args, 3);
     
-    NSArray * newPermissions = [args objectAtIndex:0];
+    NSArray *newPermissions = [args objectAtIndex:0];
     int audience = [args objectAtIndex:1];
-    KrollCallback * callback = [args objectAtIndex:2];
+    KrollCallback *callback = [args objectAtIndex:2];
     
     TiThreadPerformOnMainThread(^{
     
@@ -384,7 +413,7 @@ KrollCallback* loginCallback;
             }
                                                 
             if(callback) {
-                KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:event thisObject:self];
+                KrollEvent *invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:event thisObject:self];
                 [[callback context] enqueue:invocationEvent];
                 [invocationEvent release];
             }
@@ -634,6 +663,8 @@ KrollCallback* loginCallback;
         [[loginCallback context] enqueue:invocationEvent];
         [invocationEvent release];
     }
+    
+    [self fireEvent:@"login"];
 }
 
 
