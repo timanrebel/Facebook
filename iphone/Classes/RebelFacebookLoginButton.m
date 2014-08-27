@@ -7,6 +7,8 @@
 
 #import "RebelFacebookLoginButton.h"
 
+NSArray *permissions;
+
 @implementation RebelFacebookLoginButton
 
 -(void)dealloc
@@ -17,8 +19,12 @@
 
 -(void)configurationSet
 {
-    button = [[FBLoginView alloc] initWithReadPermissions:
-              @[@"public_profile", @"email", @"user_birthday"]];
+    if(permissions) {
+        NSLog(@"Init with permissions");
+        button = [[FBLoginView alloc] initWithReadPermissions:permissions];
+    }
+    else
+        button = [[FBLoginView alloc] init];
     button.delegate = self;
     
 //    button.tooltipBehavior = FBLoginViewTooltipBehaviorForceDisplay;
@@ -34,6 +40,15 @@
 	}
     
     [super frameSizeChanged:frame bounds:bounds];
+}
+
+-(void)setReadPermissions_:(NSArray *)perms
+{
+    permissions = perms;
+    
+    // If button has already been created, update permissions
+    if(button != nil)
+        button.readPermissions = permissions;
 }
 
 // This method will be called when the user information has been fetched

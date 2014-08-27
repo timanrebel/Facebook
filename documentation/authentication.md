@@ -79,3 +79,18 @@ Audience is one of the following:
 #### requestNewReadPermissions(Array permissions, function callback)
 
 Request extra read permissions from Facebook
+
+### Events
+
+#### login
+
+Fired when a Facebook session is opened. I.e. a valid Facebook login. Has the following event details (similar to the `authenticate` callback):
+
+* success (bool)
+* cancelled (bool)
+* error (object)
+* accessTokenData (object)
+
+#### logout
+
+Fired when the Facebook session is closed. Does not have any event details
