@@ -49,7 +49,7 @@ KrollCallback* loginCallback;
 + (void)load {
     NSError *error = nil;
     
-    [TiApp jr_swizzleMethod:@selector(applicationDidBecomeActive)
+    [TiApp jr_swizzleMethod:@selector(applicationDidBecomeActive:)
                  withMethod:@selector(facebookApplicationDidBecomeActive:)
                       error:&error];
     if(error)
