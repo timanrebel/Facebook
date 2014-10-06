@@ -15,43 +15,49 @@
     [super dealloc];
 }
 
--(void)initializeState
+-(void)configurationSet
 {
-#if DEBUG
-    [FBSettings enableBetaFeature:FBBetaFeaturesLikeButton];
-#endif
-    
     button = [[FBLikeControl alloc] init];
-    button.objectID = @"http://facebook.com/rebelsapp";
+    
+    
+    if([self proxyValueForKey:@"objectID"]) {
+        NSString *objectID = [self proxyValueForKey:@"objectID"];
+        
+        ENSURE_STRING(objectID);
+        
+        button.objectID = objectID;
+    }
+    
+    if([self proxyValueForKey:@"color"])
+        button.foregroundColor = [[TiUtils colorValue:[self proxyValueForKey:@"color"]] _color];
+    
+    if([self proxyValueForKey:@"style"]) {
+        NSString *bType = [self proxyValueForKey:@"style"];
+        
+        ENSURE_STRING(bType);
+        
+        if([bType isEqualToString:@"boxCount"])
+            button.likeControlStyle = FBLikeControlStyleBoxCount;
+        else if([bType isEqualToString:@"button"])
+            button.likeControlStyle = FBLikeControlStyleButton;
+    }
     
     [self addSubview:button];
 }
 
 -(void)frameSizeChanged:(CGRect)frame bounds:(CGRect)bounds
 {
-    if (button!=nil)
+    if (button != nil)
     {
         [TiUtils setView:button positionRect:bounds];
     }
+    
+    [super frameSizeChanged:frame bounds:bounds];
 }
-
 
 -(void)willMoveToSuperview:(UIView *)newSuperview
 {
 	NSLog(@"[VIEW LIFECYCLE EVENT] willMoveToSuperview");
-}
-
-
--(void)setUrl_:(id)url
-{
-	// This method is a property 'setter' for the 'color' property of the
-	// view. View property methods are named using a special, required
-	// convention (the underscore suffix).
-	
-	NSLog(@"[VIEW LIFECYCLE EVENT] Property Set: setUrl_");
-    NSLog(@"Like available: %@", FBLikeControl.dialogIsAvailable);
-	
-//    button.objectID = url;
 }
 
 @end

@@ -29,6 +29,10 @@
 		AA747D9F0F9514B9006C5449 /* RebelFacebook_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* RebelFacebook_Prefix.pch */; };
 		AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };
 		BC13FF5319E289D800853D07 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BC13FF5219E289D800853D07 /* FacebookSDK.framework */; };
+		BC13FF5819E28A5700853D07 /* RebelFacebookLikeButton.h in Headers */ = {isa = PBXBuildFile; fileRef = BC13FF5419E28A5700853D07 /* RebelFacebookLikeButton.h */; };
+		BC13FF5919E28A5700853D07 /* RebelFacebookLikeButton.m in Sources */ = {isa = PBXBuildFile; fileRef = BC13FF5519E28A5700853D07 /* RebelFacebookLikeButton.m */; };
+		BC13FF5A19E28A5700853D07 /* RebelFacebookLikeButtonProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = BC13FF5619E28A5700853D07 /* RebelFacebookLikeButtonProxy.h */; };
+		BC13FF5B19E28A5700853D07 /* RebelFacebookLikeButtonProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = BC13FF5719E28A5700853D07 /* RebelFacebookLikeButtonProxy.m */; };
 		BCA5920D19ADFBA300A30670 /* RebelFacebookLoginButton.h in Headers */ = {isa = PBXBuildFile; fileRef = BCA5920B19ADFBA300A30670 /* RebelFacebookLoginButton.h */; };
 		BCA5920E19ADFBA300A30670 /* RebelFacebookLoginButton.m in Sources */ = {isa = PBXBuildFile; fileRef = BCA5920C19ADFBA300A30670 /* RebelFacebookLoginButton.m */; };
 		BCA5921119ADFBB300A30670 /* RebelFacebookLoginButtonProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = BCA5920F19ADFBB300A30670 /* RebelFacebookLoginButtonProxy.h */; };
@@ -68,6 +72,10 @@
 		AA747D9E0F9514B9006C5449 /* RebelFacebook_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RebelFacebook_Prefix.pch; sourceTree = SOURCE_ROOT; };
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		BC13FF5219E289D800853D07 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FacebookSDK.framework; path = assets/Frameworks/FacebookSDK.framework; sourceTree = "<group>"; };
+		BC13FF5419E28A5700853D07 /* RebelFacebookLikeButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RebelFacebookLikeButton.h; path = Classes/RebelFacebookLikeButton.h; sourceTree = "<group>"; };
+		BC13FF5519E28A5700853D07 /* RebelFacebookLikeButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RebelFacebookLikeButton.m; path = Classes/RebelFacebookLikeButton.m; sourceTree = "<group>"; };
+		BC13FF5619E28A5700853D07 /* RebelFacebookLikeButtonProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RebelFacebookLikeButtonProxy.h; path = Classes/RebelFacebookLikeButtonProxy.h; sourceTree = "<group>"; };
+		BC13FF5719E28A5700853D07 /* RebelFacebookLikeButtonProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RebelFacebookLikeButtonProxy.m; path = Classes/RebelFacebookLikeButtonProxy.m; sourceTree = "<group>"; };
 		BCA5920B19ADFBA300A30670 /* RebelFacebookLoginButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RebelFacebookLoginButton.h; path = Classes/RebelFacebookLoginButton.h; sourceTree = "<group>"; };
 		BCA5920C19ADFBA300A30670 /* RebelFacebookLoginButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RebelFacebookLoginButton.m; path = Classes/RebelFacebookLoginButton.m; sourceTree = "<group>"; };
 		BCA5920F19ADFBB300A30670 /* RebelFacebookLoginButtonProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RebelFacebookLoginButtonProxy.h; path = Classes/RebelFacebookLoginButtonProxy.h; sourceTree = "<group>"; };
@@ -163,6 +171,10 @@
 		BCA5921419AE085C00A30670 /* Like button */ = {
 			isa = PBXGroup;
 			children = (
+				BC13FF5419E28A5700853D07 /* RebelFacebookLikeButton.h */,
+				BC13FF5519E28A5700853D07 /* RebelFacebookLikeButton.m */,
+				BC13FF5619E28A5700853D07 /* RebelFacebookLikeButtonProxy.h */,
+				BC13FF5719E28A5700853D07 /* RebelFacebookLikeButtonProxy.m */,
 			);
 			name = "Like button";
 			sourceTree = "<group>";
@@ -183,8 +195,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BC13FF5819E28A5700853D07 /* RebelFacebookLikeButton.h in Headers */,
 				AA747D9F0F9514B9006C5449 /* RebelFacebook_Prefix.pch in Headers */,
 				BCA5921119ADFBB300A30670 /* RebelFacebookLoginButtonProxy.h in Headers */,
+				BC13FF5A19E28A5700853D07 /* RebelFacebookLikeButtonProxy.h in Headers */,
 				BCA592F519AE14EC00A30670 /* JRSwizzle.h in Headers */,
 				24DD6CF91134B3F500162E58 /* RebelFacebookModule.h in Headers */,
 				BCA5920D19ADFBA300A30670 /* RebelFacebookLoginButton.h in Headers */,
@@ -263,7 +277,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				BCA592F619AE14EC00A30670 /* JRSwizzle.m in Sources */,
+				BC13FF5919E28A5700853D07 /* RebelFacebookLikeButton.m in Sources */,
 				BCA5920E19ADFBA300A30670 /* RebelFacebookLoginButton.m in Sources */,
+				BC13FF5B19E28A5700853D07 /* RebelFacebookLikeButtonProxy.m in Sources */,
 				24DD6CFA1134B3F500162E58 /* RebelFacebookModule.m in Sources */,
 				24DE9E1211C5FE74003F90F6 /* RebelFacebookModuleAssets.m in Sources */,
 				BCA5921219ADFBB300A30670 /* RebelFacebookLoginButtonProxy.m in Sources */,

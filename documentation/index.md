@@ -25,11 +25,13 @@ The documentation is split up in the following sections:
 
 * [Login with Facebook](authentication.md)
 * [Dialogs and UI controls](dialogs.md)
+* [Like button](like.md)
 * [App Events](appEvents.md)
 * [Graph API](graphApi.md)
 
 ## Changelog
 
+* [1.0.6](https://github.com/timanrebel/Facebook/releases/tag/1.0.6) Added support for the new native Like button
 * [1.0.4](https://github.com/timanrebel/Facebook/releases/tag/1.0.4) Added support for Login button, rewrote internal structure and re-added login/logout events
 * [1.0.2](https://github.com/timanrebel/Facebook/releases/tag/1.0.2) Support for first Graph API call and Share Dialog
 * [1.0.1](https://github.com/timanrebel/Facebook/releases/tag/1.0.1) Support for App Events
