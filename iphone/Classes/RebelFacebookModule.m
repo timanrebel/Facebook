@@ -112,44 +112,44 @@ KrollCallback *loginCallback;
 {
 	NSLog(@"[DEBUG] facebook resumed");
     
-	if (!temporarilySuspended) {
-        NSDictionary *launchOptions = [[TiApp app] launchOptions];
-        if (launchOptions != nil)
-        {
-            NSString *urlString = [launchOptions objectForKey:@"url"];
-            NSString *sourceApplication = [launchOptions objectForKey:@"source"];
-            
-            if (urlString != nil) {
-                // Note this handler block should be the exact same as the handler passed to any open calls.
-                [FBSession.activeSession setStateChangeHandler:^(FBSession *session, FBSessionState state, NSError *error) {
-                    // Call the app delegate's sessionStateChanged:state:error method to handle session state changes
-                    [self sessionStateChanged:session state:state error:error];
-                }];
-                
-                return [FBAppCall handleOpenURL:[NSURL URLWithString:urlString] sourceApplication:sourceApplication];
-            } else {
-                return NO;
-            }
+    // Note this handler block should be the exact same as the handler passed to any open calls.
+    [FBSession.activeSession setStateChangeHandler:^(FBSession *session, FBSessionState state, NSError *error) {
+        // Call the app delegate's sessionStateChanged:state:error method to handle session state changes
+        [self sessionStateChanged:session state:state error:error];
+    }];
+    
+    TiThreadPerformOnMainThread(^{
+        if (FBSession.activeSession.state == FBSessionStateCreatedTokenLoaded) {
+            // Start with logged-in state, guaranteed no login UX is fired since logged-in
+            // If there's one, just open the session silently, without showing the user the login UI
+            NSLog(@"[DEBUG] Cached token found, opening active session.");
+            [FBSession openActiveSessionWithReadPermissions:@[@"public_profile"]
+                                               allowLoginUI:NO
+                                          completionHandler:^(FBSession *session, FBSessionState state, NSError *error) {
+                                              // Handler for session state changes
+                                              // This method will be called EACH time the session state changes,
+                                              // also for intermediate states and NOT just when the session open
+                                              [self sessionStateChanged:session state:state error:error];
+                                          }];
         }
+    }, NO);
+    
+    // Handle
+    NSDictionary *launchOptions = [[TiApp app] launchOptions];
+    if (launchOptions != nil)
+    {
+        NSString *urlString = [launchOptions objectForKey:@"url"];
+        NSString *sourceApplication = [launchOptions objectForKey:@"source"];
         
-        TiThreadPerformOnMainThread(^{
-            if (FBSession.activeSession.state == FBSessionStateCreatedTokenLoaded) {
-                // Start with logged-in state, guaranteed no login UX is fired since logged-in
-                // If there's one, just open the session silently, without showing the user the login UI
-                NSLog(@"[DEBUG] Cached token found, opening active session.");
-                [FBSession openActiveSessionWithReadPermissions:@[@"public_profile"]
-                                                   allowLoginUI:NO
-                                              completionHandler:^(FBSession *session, FBSessionState state, NSError *error) {
-                                                  // Handler for session state changes
-                                                  // This method will be called EACH time the session state changes,
-                                                  // also for intermediate states and NOT just when the session open
-                                                  [self sessionStateChanged:session state:state error:error];
-                                              }];
-            }
-        }, YES);
-        
-        return NO;
+        if (urlString != nil) {
+            
+            return [FBAppCall handleOpenURL:[NSURL URLWithString:urlString] sourceApplication:sourceApplication];
+        } else {
+            return NO;
+        }
     }
+    
+    return NO;
 }
 
 #pragma mark Cleanup
