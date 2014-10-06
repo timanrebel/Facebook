@@ -1,7 +1,6 @@
 # Facebook Module
 
-This module is work in progress and it's API is not yet stable.
-That is, backwards incompatible changes might still be pushed.
+The goal of this module is to support as much as possible of the latest Facebook SDK (for iOS).
 
 ## Quick Start
 
