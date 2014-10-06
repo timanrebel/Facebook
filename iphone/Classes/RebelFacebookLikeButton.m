@@ -19,7 +19,6 @@
 {
     button = [[FBLikeControl alloc] init];
     
-    
     if([self proxyValueForKey:@"objectID"]) {
         NSString *objectID = [self proxyValueForKey:@"objectID"];
         
@@ -41,6 +40,31 @@
         else if([bType isEqualToString:@"button"])
             button.likeControlStyle = FBLikeControlStyleButton;
     }
+    
+    if([self proxyValueForKey:@"align"]) {
+        NSString *align = [self proxyValueForKey:@"align"];
+        
+        ENSURE_STRING(align);
+        
+        if([align isEqualToString:@"right"])
+            button.likeControlHorizontalAlignment = FBLikeControlHorizontalAlignmentRight;
+        else if([align isEqualToString:@"center"])
+            button.likeControlHorizontalAlignment = FBLikeControlHorizontalAlignmentCenter;
+    }
+    
+    if([self proxyValueForKey:@"auxiliaryPosition"]) {
+        NSString *position = [self proxyValueForKey:@"auxiliaryPosition"];
+        
+        ENSURE_STRING(position);
+        
+        if([position isEqualToString:@"top"])
+            button.likeControlAuxiliaryPosition = FBLikeControlAuxiliaryPositionTop;
+        else if([position isEqualToString:@"bottom"])
+            button.likeControlAuxiliaryPosition = FBLikeControlAuxiliaryPositionBottom;
+    }
+    
+    if([self proxyValueForKey:@"soundEnabled"] != nil)
+        button.soundEnabled = [self proxyValueForKey:@"soundEnabled"];
     
     [self addSubview:button];
 }

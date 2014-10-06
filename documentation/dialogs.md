@@ -54,7 +54,10 @@ You can easily create a like button by calling:
 #### Properties
 * `objectID`: The url or ID to like on Facebook
 * `color`: Sets the color of the text.
-* `type`: Specify the type of button you want. Possible values are: `standard`, `button`, `boxCount`
+* `style`: Specify the type of button you want. Possible values: `standard`, `button`, `boxCount`. Default: `standard`
+* `align`: The text alignment of the social sentence. Possible values: `left`, `center`, `left`. Default: `left`
+* `auxiliaryPosition`: The position for the auxiliary view for the receiver. (the like count). Possible values: `top`, `inline`, `bottom`. Default: `inline`
+* `soundEnabled`: If `true`, a sound is played when the receiver is toggled. Default: `true`
 
 
 ## Dialogs

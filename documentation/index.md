@@ -30,6 +30,7 @@ The documentation is split up in the following sections:
 
 ## Changelog
 
+* [1.0.7](https://github.com/timanrebel/Facebook/releases/tag/1.0.7) Added some missing properties to the Like button
 * [1.0.6](https://github.com/timanrebel/Facebook/releases/tag/1.0.6) Added support for the new native Like button
 * [1.0.5](https://github.com/timanrebel/Facebook/releases/tag/1.0.5) Fixed minor issue with applicationDidBecameActive not being fired and session tokens might not correctly renew because of that. Also the app event was not logged.
 * [1.0.4](https://github.com/timanrebel/Facebook/releases/tag/1.0.4) Added support for Login button, rewrote internal structure and re-added login/logout events
