@@ -5,12 +5,10 @@
  * Please see the LICENSE included with this distribution for details.
  */
 #import "TiUIView.h"
-#import "FacebookSDK.h"
+#import <FacebookSDK/FacebookSDK.h>
 
 @interface RebelFacebookLoginButton : TiUIView  <FBLoginViewDelegate> {
     FBLoginView *button;
 }
-
-
 
 @end
