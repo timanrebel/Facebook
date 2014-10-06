@@ -25,7 +25,6 @@ The documentation is split up in the following sections:
 
 * [Login with Facebook](authentication.md)
 * [Dialogs and UI controls](dialogs.md)
-* [Like button](like.md)
 * [App Events](appEvents.md)
 * [Graph API](graphApi.md)
 
