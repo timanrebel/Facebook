@@ -74,10 +74,6 @@ KrollCallback *loginCallback;
 
 -(void)startup
 {
-    #if DEBUG
-    [FBSettings enableBetaFeature:FBBetaFeaturesLikeButton];
-    #endif
-        
 	// you *must *call the superclass
 	[super startup];
 
@@ -242,9 +238,18 @@ KrollCallback *loginCallback;
 
 -(BOOL)canShare
 {
-    FBShareDialogParams *params = [[FBShareDialogParams alloc] init];
+    FBLinkShareParams *params = [[FBLinkShareParams alloc] init];
     params.link = [NSURL URLWithString:@"http://developers.facebook.com/ios"];
+    
     return [FBDialogs canPresentShareDialogWithParams:params];
+}
+
+-(BOOL)canMessage
+{
+    FBLinkShareParams *params = [[FBLinkShareParams alloc] init];
+    params.link = [NSURL URLWithString:@"http://developers.facebook.com/ios"];
+    
+    return [FBDialogs canPresentMessageDialogWithParams:params];
 }
 
 // Returns the active permissions, not the wanted permissions
@@ -534,6 +539,70 @@ KrollCallback *loginCallback;
 //              NSLog( @"%@", results);
           }
       }];
+}
+
+-(void)messageLink:args
+{
+    // Check if the Facebook app is installed and we can present
+    // the message dialog
+    NSDictionary *argsDict = [args objectAtIndex:0];
+
+    FBLinkShareParams *params = [[FBLinkShareParams alloc] init];
+    params.link = [NSURL URLWithString:[argsDict objectForKey:@"url"]];
+    params.name = [argsDict objectForKey:@"name"];
+    params.caption = [argsDict objectForKey:@"caption"];
+    params.picture = [NSURL URLWithString:[argsDict objectForKey:@"picture"]];
+    //params.description = [argsDict objectForKey:@"description"];
+    
+    
+    [FBDialogs presentMessageDialogWithParams:params
+                clientState:nil
+                  handler:^(FBAppCall *call, NSDictionary *results, NSError *error) {
+                      if (error) {
+                          NSLog(@"Error: %@",
+                                error.description);
+                      } else {
+                          NSLog(@"Success!");
+                      }
+                  }];
+}
+
+-(void)messageOpenGraphAction:args
+{
+    NSDictionary *params = [args objectAtIndex:0];
+    
+    NSURL *link = [NSURL URLWithString:[params objectForKey:@"url"]];
+    NSURL *picture = [NSURL URLWithString:[params objectForKey:@"picture"]];
+    NSString *title = [params objectForKey:@"title"];
+    NSString *description = [params objectForKey:@"description"];
+    
+    NSString *actionType = [params objectForKey:@"actionType"];
+    NSString *previewPropertyName = [params objectForKey:@"previewPropertyName"];
+    
+    id<FBGraphObject> ogObject = [FBGraphObject openGraphObjectForPostWithType: actionType
+                                                                         title: title
+                                                                         image: picture
+                                                                           url: link
+                                                                   description: description];
+    
+    id<FBOpenGraphAction> ogAction = (id<FBOpenGraphAction>)[FBGraphObject graphObject];
+    [ogAction setObject:ogObject forKey:previewPropertyName];
+    
+    FBOpenGraphActionParams *ogParams = [[FBOpenGraphActionParams alloc] init];
+    ogParams.action = ogAction;
+    ogParams.previewPropertyName = previewPropertyName;
+    ogParams.actionType = [params objectForKey:@"actionType"];
+    
+    [FBDialogs presentMessageDialogWithOpenGraphActionParams: ogParams
+                                         clientState: nil
+                                             handler: ^(FBAppCall *call, NSDictionary *results, NSError *error) {
+                                                 if(error) {
+                                                     NSLog(@"Error: %@", error.description);
+                                                 } else {
+                                                     NSLog(@"Success!");
+                                                     //              NSLog( @"%@", results);
+                                                 }
+                                             }];
 }
 
 -(void)me:args
