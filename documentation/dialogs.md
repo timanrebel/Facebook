@@ -64,6 +64,22 @@ You can easily create a like button by calling:
 ### Share Dialog
 The Share dialog works by making a one-line call to the SDK that configures the content to share, does an app switch to the native Facebook for iOS app, and returns to your app once people have shared. The Share Dialog requires that the user has the native Facebook for iOS app installed on their device.
 
-#### shareStatus(Object args)
-#### shareLink(Object args)
-#### shareOpenGraphAction(Object args)
+#### void shareStatus(Object args)
+#### void shareLink(Object args)
+#### void shareOpenGraphAction(Object args)
+
+### Messenger Dialog
+
+Share via Facebook Messenger
+
+#### bool canMessage()
+
+Returns true when the app can share links or Open Graph actions via Facebook Messenger
+
+#### void messageLink(Object args)
+* `url` URL of the link to share
+* `title`
+* `caption`
+* `picture` URL of the image to add to the link
+
+Share a link via Facebook Messenger.

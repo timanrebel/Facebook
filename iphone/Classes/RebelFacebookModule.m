@@ -549,9 +549,12 @@ KrollCallback *loginCallback;
 
     FBLinkShareParams *params = [[FBLinkShareParams alloc] init];
     params.link = [NSURL URLWithString:[argsDict objectForKey:@"url"]];
-    params.name = [argsDict objectForKey:@"name"];
+    params.name = [argsDict objectForKey:@"title"];
     params.caption = [argsDict objectForKey:@"caption"];
-    params.picture = [NSURL URLWithString:[argsDict objectForKey:@"picture"]];
+    
+    if([argsDict objectForKey:@"picture"])
+        params.picture = [NSURL URLWithString:[argsDict objectForKey:@"picture"]];
+
     //params.description = [argsDict objectForKey:@"description"];
     
     
