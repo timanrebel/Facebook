@@ -6,8 +6,6 @@ Based upon the work of [Appcelerator](https://github.com/appcelerator-modules) a
 
 The goal for this module is to support the complete and latest version of the Facebook SDK for iOS (and later Android).
 
-This module is work in progress and it's API is not yet stable. That is, backwards incompatible changes might still be pushed.
-
 ## Quick Start
 
 ### Get it [![gitTio](http://gitt.io/badge.png)](http://gitt.io/component/rebel.facebook)
