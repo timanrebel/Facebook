@@ -10,7 +10,7 @@
 //
 // How to add a Framework (example)
 //
-FRAMEWORK_SEARCH_PATHS=$(SRCROOT)/../../modules/iphone/rebel.facebook/1.0.8/platform
+FRAMEWORK_SEARCH_PATHS=$(SRCROOT)/../../modules/iphone/rebel.facebook/1.0.9/platform
 
 OTHER_LDFLAGS=$(inherited) -framework FacebookSDK
 //
