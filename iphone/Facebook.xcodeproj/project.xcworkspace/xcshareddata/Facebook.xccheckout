@@ -11,17 +11,17 @@
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>1BE67E5B423BA284728A92586F92B9E71616C3D3</key>
-		<string>ssh://github.com/timanrebel/rebel.Facebook.git</string>
+		<string>github.com:timanrebel/rebel.Facebook.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>iphone/Facebook.xcodeproj/project.xcworkspace</string>
+	<string>iphone/Facebook.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>1BE67E5B423BA284728A92586F92B9E71616C3D3</key>
 		<string>../../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>ssh://github.com/timanrebel/rebel.Facebook.git</string>
+	<string>github.com:timanrebel/rebel.Facebook.git</string>
 	<key>IDESourceControlProjectVersion</key>
 	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
