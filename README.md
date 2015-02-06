@@ -19,6 +19,7 @@ Documentation for this module can be found in the [documentation](https://github
 
 ## Changelog
 
+* [1.0.10](https://github.com/timanrebel/Facebook/releases/tag/1.0.10) Added support for 64-bit
 * [1.0.9](https://github.com/timanrebel/Facebook/releases/tag/1.0.9) Upgraded Facebook SDK to 3.20, to support the new Graph API 2.2
 * [1.0.8](https://github.com/timanrebel/Facebook/releases/tag/1.0.8) Prevented FB Framework to be added to the final app, increasing size by 26mb. Also added `messageLink` function to send a link via Messenger.
 * [1.0.7](https://github.com/timanrebel/Facebook/releases/tag/1.0.7) Added some missing properties to the Like button
